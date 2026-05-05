@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat History - Interface</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>> Sessions_</h2>
+                <button onclick="createNewSession()" style="width: 100%; margin-top: 10px; font-size: 0.8em;">+ New Session</button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="search.html">> Search</a>
+                <a href="bookmarks.html">> Bookmarks</a>
+                <a href="#" onclick="logout()">> Logout</a>
+            </nav>
+
+            <div class="sidebar-section">
+                <h3>Context Picker</h3>
+                <button onclick="openContextModal()" style="width: 80%; margin: 0 20px; font-size: 0.7em;">Load Context</button>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Recent Sessions</h3>
+                <ul class="session-list" id="sessionList">
+                    <!-- Sessions loaded here -->
+                </ul>
+            </div>
+        </aside>
+
+        <main class="main-area">
+            <div class="chat-header">
+                <h3 id="currentSessionTitle">> Select a session_</h3>
+                <div class="context-badge" id="contextBadge">[Context: None] <span onclick="clearContext()" style="cursor:pointer; margin-left:5px;">x</span></div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages go here -->
+            </div>
+
+            <div class="chat-input-area">
+                <form id="chatForm" class="input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Enter command or query..." autocomplete="off" disabled>
+                    <button type="submit" id="sendBtn" disabled>Send</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Context Modal -->
+    <div class="modal" id="contextModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Context Session</h2>
+                <span class="close-btn" onclick="closeContextModal()">&times;</span>
+            </div>
+            <div class="session-picker-list" id="contextSessionList">
+                <!-- Session list items to pick -->
+            </div>
+            <div class="preview-area" id="contextPreview" style="display: none;">
+                <!-- Preview first and last msgs -->
+            </div>
+            <button onclick="confirmContext()" style="width: 100%; margin-top: 10px;">Use as Context</button>
+        </div>
+    </div>
+
+    <script src="js/chat.js"></script>
+</body>
+</html>
