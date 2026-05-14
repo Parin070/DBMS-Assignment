@@ -52,10 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('user', JSON.stringify(data.user));
                 window.location.href = 'chat.html';
             } else {
-                errorDiv.innerText = data.error || 'Registration failed';
+                errorDiv.innerText = 'Server Error: ' + (data.error || JSON.stringify(data) || 'Unknown Registration Failure');
             }
         } catch (err) {
-            errorDiv.innerText = 'Network error';
+            errorDiv.innerText = 'Network error: ' + err.message;
         }
     });
 });
