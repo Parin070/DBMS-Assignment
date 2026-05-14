@@ -4,16 +4,17 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 async function setupDatabase() {
-    console.log("Connecting to the database...");
-    const connection = await mysql.createConnection({
-        host: process.env.MYSQL_HOST || process.env.MYSQLHOST || 'localhost',
-        port: process.env.MYSQL_PORT || process.env.MYSQLPORT || 3306,
-        user: process.env.MYSQL_USER || process.env.MYSQLUSER || 'root',
-        password: process.env.MYSQL_PASSWORD || process.env.MYSQLPASSWORD || '',
-        multipleStatements: true
-    });
-
+    let connection;
     try {
+        console.log("Connecting to the database...");
+        connection = await mysql.createConnection({
+            host: process.env.MYSQL_HOST || process.env.MYSQLHOST || 'localhost',
+            port: process.env.MYSQL_PORT || process.env.MYSQLPORT || 3306,
+            user: process.env.MYSQL_USER || process.env.MYSQLUSER || 'root',
+            password: process.env.MYSQL_PASSWORD || process.env.MYSQLPASSWORD || '',
+            multipleStatements: true
+        });
+
         console.log("Running schema.sql...");
         const schema = fs.readFileSync(path.join(__dirname, '../database/schema.sql'), 'utf8');
         await connection.query(schema);
@@ -34,7 +35,9 @@ async function setupDatabase() {
     } catch (error) {
         console.error("❌ Error setting up database:", error.message);
     } finally {
-        await connection.end();
+        if (connection) {
+            await connection.end();
+        }
     }
 }
 
