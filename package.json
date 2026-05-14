@@ -4,6 +4,6 @@
   "private": true,
   "scripts": {
     "install": "cd backend && npm install",
-    "start": "node backend/server.js"
+    "start": "node backend/setup-db.js && node backend/server.js"
   }
 }
