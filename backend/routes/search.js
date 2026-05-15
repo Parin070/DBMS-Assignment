@@ -9,10 +9,17 @@ router.get('/', authenticateToken, async (req, res) => {
         const keyword = req.query.q;
         if (!keyword) return res.json([]);
 
-        // Call SearchMessages stored procedure
-        const [rows] = await pool.query('CALL SearchMessages(?, ?)', [req.user.id, keyword]);
+        // Direct SQL instead of CALL SearchMessages (procedure may not exist on Railway)
+        const [rows] = await pool.query(
+            `SELECT m.id, m.session_id, m.role, m.content, m.timestamp, s.title AS session_title
+             FROM Messages m
+             JOIN Sessions s ON m.session_id = s.id
+             WHERE s.user_id = ? AND m.content LIKE CONCAT('%', ?, '%')
+             ORDER BY m.timestamp DESC`,
+            [req.user.id, keyword]
+        );
         
-        res.json(rows[0]); // First result set from the procedure
+        res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
