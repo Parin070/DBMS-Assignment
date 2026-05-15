@@ -15,21 +15,48 @@ async function setupDatabase() {
             multipleStatements: true
         });
 
+        // Helper to execute files with DELIMITER //
+        async function executeDelimiterFile(filePath) {
+            const sqlFile = fs.readFileSync(filePath, 'utf8');
+            // Remove USE statements to prevent access denied on Railway
+            let sql = sqlFile.replace(/USE ai_chat_db;/gi, '');
+            // Strip out the DELIMITER commands
+            sql = sql.replace(/DELIMITER \/\//gi, '');
+            sql = sql.replace(/DELIMITER ;/gi, '');
+            
+            // Split by //
+            const blocks = sql.split('//').map(b => b.trim()).filter(b => b.length > 0);
+            
+            for (const block of blocks) {
+                try {
+                    await connection.query(block);
+                } catch (err) {
+                    // Ignore "already exists" errors just in case it partially ran before
+                    if (!err.message.includes("already exists")) {
+                        throw err;
+                    }
+                }
+            }
+        }
+
         console.log("Running schema.sql...");
-        const schema = fs.readFileSync(path.join(__dirname, '../database/schema.sql'), 'utf8');
+        let schema = fs.readFileSync(path.join(__dirname, '../database/schema.sql'), 'utf8');
+        schema = schema.replace(/USE ai_chat_db;/gi, ''); // Strip USE to be safe
+        schema = schema.replace(/CREATE DATABASE IF NOT EXISTS ai_chat_db;/gi, ''); // Strip CREATE DB
         await connection.query(schema);
 
         console.log("Running triggers.sql...");
-        const triggers = fs.readFileSync(path.join(__dirname, '../database/triggers.sql'), 'utf8');
-        await connection.query(triggers);
+        await executeDelimiterFile(path.join(__dirname, '../database/triggers.sql'));
 
         console.log("Running procedures.sql...");
-        const procedures = fs.readFileSync(path.join(__dirname, '../database/procedures.sql'), 'utf8');
-        await connection.query(procedures);
+        await connection.query("DROP PROCEDURE IF EXISTS CreateSession");
+        await connection.query("DROP PROCEDURE IF EXISTS SearchMessages");
+        await executeDelimiterFile(path.join(__dirname, '../database/procedures.sql'));
 
         console.log("Running functions.sql...");
-        const functions = fs.readFileSync(path.join(__dirname, '../database/functions.sql'), 'utf8');
-        await connection.query(functions);
+        await connection.query("DROP FUNCTION IF EXISTS GetSessionSummary");
+        await connection.query("DROP FUNCTION IF EXISTS GetActiveUsersLast7Days");
+        await executeDelimiterFile(path.join(__dirname, '../database/functions.sql'));
 
         console.log("✅ Database successfully initialized!");
     } catch (error) {
