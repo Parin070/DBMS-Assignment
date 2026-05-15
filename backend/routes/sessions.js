@@ -20,10 +20,11 @@ router.get('/', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const { title } = req.body;
-        const [rows] = await pool.query('CALL CreateSession(?, ?)', [req.user.id, title || 'New Session']);
-        const newSessionId = rows[0][0].session_id;
+        const sessionTitle = title || 'New Session';
+        const [result] = await pool.query('INSERT INTO Sessions (user_id, title) VALUES (?, ?)', [req.user.id, sessionTitle]);
+        const newSessionId = result.insertId;
         
-        res.json({ id: newSessionId, title: title || 'New Session' });
+        res.json({ id: newSessionId, title: sessionTitle });
     } catch (err) {
         console.error('POST /api/sessions error:', err.message);
         res.status(500).json({ error: err.message });
