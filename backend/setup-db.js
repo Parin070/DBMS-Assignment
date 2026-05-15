@@ -12,6 +12,7 @@ async function setupDatabase() {
             port: process.env.MYSQL_PORT || process.env.MYSQLPORT || 3306,
             user: process.env.MYSQL_USER || process.env.MYSQLUSER || 'root',
             password: process.env.MYSQL_PASSWORD || process.env.MYSQLPASSWORD || '',
+            database: process.env.MYSQL_DB || process.env.MYSQLDATABASE || 'ai_chat_db',
             multipleStatements: true
         });
 
@@ -43,7 +44,13 @@ async function setupDatabase() {
         let schema = fs.readFileSync(path.join(__dirname, '../database/schema.sql'), 'utf8');
         schema = schema.replace(/USE ai_chat_db;/gi, ''); // Strip USE to be safe
         schema = schema.replace(/CREATE DATABASE IF NOT EXISTS ai_chat_db;/gi, ''); // Strip CREATE DB
-        await connection.query(schema);
+        try {
+            await connection.query(schema);
+        } catch (err) {
+            if (!err.message.includes("already exists")) {
+                throw err;
+            }
+        }
 
         console.log("Running triggers.sql...");
         await executeDelimiterFile(path.join(__dirname, '../database/triggers.sql'));

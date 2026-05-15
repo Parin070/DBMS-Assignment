@@ -25,6 +25,7 @@ router.post('/', authenticateToken, async (req, res) => {
         
         res.json({ id: newSessionId, title: title || 'New Session' });
     } catch (err) {
+        console.error('POST /api/sessions error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
