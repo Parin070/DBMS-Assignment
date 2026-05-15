@@ -31,15 +31,26 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// DELETE /api/sessions/:id - delete session (triggers Audit_Log entry)
+// DELETE /api/sessions/:id - delete session (with audit log)
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const [result] = await pool.query('DELETE FROM Sessions WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
-        if (result.affectedRows === 0) {
+        // Check session exists and belongs to user
+        const [sessions] = await pool.query('SELECT id FROM Sessions WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        if (sessions.length === 0) {
             return res.status(404).json({ error: 'Session not found or not authorized.' });
         }
+
+        // Manually insert audit log (trigger may not exist on Railway)
+        await pool.query(
+            'INSERT INTO Audit_Log (session_id, deleted_at, deleted_by) VALUES (?, CURRENT_TIMESTAMP, ?)',
+            [req.params.id, req.user.id]
+        );
+
+        // Now delete the session
+        await pool.query('DELETE FROM Sessions WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
         res.json({ message: 'Session deleted successfully' });
     } catch (err) {
+        console.error('DELETE /api/sessions error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -53,6 +64,21 @@ router.post('/:id/tags', authenticateToken, async (req, res) => {
 
         await pool.query('INSERT IGNORE INTO Session_Tags (session_id, tag_id) VALUES (?, ?)', [req.params.id, tag_id]);
         res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/sessions/:id/tags-list - get tags for a session
+router.get('/:id/tags-list', authenticateToken, async (req, res) => {
+    try {
+        const [tags] = await pool.query(
+            `SELECT t.id, t.name FROM Tags t
+             JOIN Session_Tags st ON t.id = st.tag_id
+             WHERE st.session_id = ?`,
+            [req.params.id]
+        );
+        res.json(tags);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

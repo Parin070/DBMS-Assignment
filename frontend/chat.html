@@ -26,6 +26,16 @@
             </div>
 
             <div class="sidebar-section">
+                <h3>Tags</h3>
+                <div style="display: flex; gap: 5px; padding: 0 10px; margin-bottom: 8px;">
+                    <input type="text" id="newTagInput" placeholder="New tag..." style="flex: 1; font-size: 0.75em; padding: 4px 8px;">
+                    <button onclick="createTag()" style="font-size: 0.7em; padding: 4px 8px;">+</button>
+                </div>
+                <div id="tagList" style="padding: 0 10px; font-size: 0.75em; color: var(--text-secondary);"></div>
+                <div id="sessionTagList" style="padding: 5px 10px; font-size: 0.75em; color: var(--accent-color);"></div>
+            </div>
+
+            <div class="sidebar-section">
                 <h3>Recent Sessions</h3>
                 <ul class="session-list" id="sessionList">
                     <!-- Sessions loaded here -->

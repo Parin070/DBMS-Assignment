@@ -12,6 +12,7 @@ const headers = {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSessions();
+    loadTags();
     
     document.getElementById('chatForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -99,6 +100,7 @@ async function openSession(id, title) {
     // reset context on session change
     clearContext();
     loadSessions(); // to update active class
+    loadSessionTags();
 
     const res = await fetch(`/api/sessions/${id}/messages`, { headers });
     const messages = await res.json();
@@ -206,4 +208,79 @@ function clearContext() {
     contextSessionId = null;
     contextTitle = null;
     document.getElementById('contextBadge').style.display = 'none';
+}
+
+// --- Tags Logic ---
+async function loadTags() {
+    const res = await fetch('/api/tags', { headers });
+    const tags = await res.json();
+    const container = document.getElementById('tagList');
+    
+    if (tags.length === 0) {
+        container.innerHTML = '<span style="color: var(--text-secondary);">No tags yet</span>';
+        return;
+    }
+    
+    container.innerHTML = tags.map(t => 
+        `<span class="tag-chip" onclick="assignTag(${t.id}, '${t.name.replace(/'/g, "\\'")}')" title="Click to assign to current session" style="display:inline-block; padding:2px 8px; margin:2px; border:1px solid var(--accent-color); border-radius:12px; cursor:pointer; color:var(--accent-color);">${t.name}</span>`
+    ).join('');
+}
+
+async function createTag() {
+    const input = document.getElementById('newTagInput');
+    const name = input.value.trim();
+    if (!name) return;
+    
+    const res = await fetch('/api/tags', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name })
+    });
+    
+    if (res.ok) {
+        input.value = '';
+        loadTags();
+    }
+}
+
+async function assignTag(tagId, tagName) {
+    if (!currentSessionId) {
+        alert('Please select a session first.');
+        return;
+    }
+    
+    const res = await fetch(`/api/sessions/${currentSessionId}/tags`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ tag_id: tagId })
+    });
+    
+    if (res.ok) {
+        loadSessionTags();
+    }
+}
+
+async function loadSessionTags() {
+    if (!currentSessionId) return;
+    const container = document.getElementById('sessionTagList');
+    
+    // Fetch all tags and session_tags to show which tags are on this session
+    const [tagsRes, sessionTagsRes] = await Promise.all([
+        fetch('/api/tags', { headers }),
+        fetch(`/api/sessions/${currentSessionId}/tags-list`, { headers })
+    ]);
+    
+    const allTags = await tagsRes.json();
+    
+    if (sessionTagsRes.ok) {
+        const sessionTags = await sessionTagsRes.json();
+        if (sessionTags.length > 0) {
+            container.innerHTML = '<strong style="font-size:0.9em;">Session tags:</strong> ' + 
+                sessionTags.map(t => `<span style="color:var(--accent-color);">#${t.name}</span>`).join(' ');
+        } else {
+            container.innerHTML = '<span style="color: var(--text-secondary);">Click a tag above to assign it</span>';
+        }
+    } else {
+        container.innerHTML = '';
+    }
 }
