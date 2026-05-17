@@ -50,7 +50,13 @@
             </div>
 
             <div class="chat-messages" id="chatMessages">
-                <!-- Messages go here -->
+                <!-- Empty state prompt -->
+                <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 20px;">
+                    <div style="font-size: 3em; opacity: 0.3;">⌘</div>
+                    <h2 style="color: var(--accent-color); font-family: var(--font-mono); font-weight: normal;">> Welcome, Operator_</h2>
+                    <p style="color: var(--text-secondary); max-width: 400px; font-size: 0.9em;">Start a new chat session to begin querying the AI. Your conversations will be logged and searchable.</p>
+                    <button onclick="createNewSession()" style="margin-top: 10px; padding: 12px 30px; font-size: 1em;">+ Create New Session</button>
+                </div>
             </div>
 
             <div class="chat-input-area">

@@ -83,7 +83,14 @@ async function deleteSession(id, event) {
     await fetch(`/api/sessions/${id}`, { method: 'DELETE', headers });
     if (currentSessionId === id) {
         currentSessionId = null;
-        document.getElementById('chatMessages').innerHTML = '';
+        document.getElementById('chatMessages').innerHTML = `
+            <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 20px;">
+                <div style="font-size: 3em; opacity: 0.3;">⌘</div>
+                <h2 style="color: var(--accent-color); font-family: var(--font-mono); font-weight: normal;">> Welcome, Operator_</h2>
+                <p style="color: var(--text-secondary); max-width: 400px; font-size: 0.9em;">Start a new chat session to begin querying the AI. Your conversations will be logged and searchable.</p>
+                <button onclick="createNewSession()" style="margin-top: 10px; padding: 12px 30px; font-size: 1em;">+ Create New Session</button>
+            </div>
+        `;
         document.getElementById('currentSessionTitle').innerText = '> Select a session_';
         document.getElementById('messageInput').disabled = true;
         document.getElementById('sendBtn').disabled = true;
@@ -110,12 +117,41 @@ async function openSession(id, title) {
     messages.forEach(m => appendMessage(m.role, m.content, m.id));
 }
 
+function parseMarkdown(text) {
+    // Code blocks (```lang ... ```)
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="lang-$1">$2</code></pre>');
+    // Inline code
+    text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+    // Headers
+    text = text.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    text = text.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    text = text.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+    // Bold + Italic
+    text = text.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    // Bold
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Unordered lists
+    text = text.replace(/^\* (.+)$/gm, '<li>$1</li>');
+    text = text.replace(/^- (.+)$/gm, '<li>$1</li>');
+    text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    // Clean up double-nested <ul>
+    text = text.replace(/<\/ul>\s*<ul>/g, '');
+    // Line breaks (for remaining plain text lines)
+    text = text.replace(/\n/g, '<br>');
+    // Clean up <br> after block elements
+    text = text.replace(/<\/(pre|h[2-4]|ul|li)><br>/g, '</$1>');
+    return text;
+}
+
 function appendMessage(role, content, msgId = null) {
     const container = document.getElementById('chatMessages');
     const div = document.createElement('div');
     div.className = `message ${role}`;
     
-    let contentHtml = `<div class="content">${content.replace(/\n/g, '<br>')}</div>`;
+    const rendered = role === 'assistant' ? parseMarkdown(content) : content.replace(/\n/g, '<br>');
+    let contentHtml = `<div class="content">${rendered}</div>`;
     let metaHtml = `<div class="message-meta"><span>${role.toUpperCase()}</span>`;
     
     if (role === 'assistant' && msgId) {
