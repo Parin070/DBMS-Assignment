@@ -134,11 +134,13 @@ button:hover {
 /* Sidebar */
 .sidebar {
     width: 260px;
+    min-width: 260px;
     background-color: var(--panel-bg);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     padding: 20px 0;
+    overflow-y: auto;
 }
 
 .sidebar-header {
@@ -162,8 +164,7 @@ button:hover {
 
 .sidebar-section {
     margin-top: 20px;
-    flex-grow: 1;
-    overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .sidebar-section h3 {
