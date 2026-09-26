@@ -6,7 +6,7 @@
 
 ## Overview
 
-AI Chat History is a full-stack web application that provides a clean, terminal-themed interface for interacting with **Google Gemini AI** while maintaining a complete, searchable log of every conversation. Users can create chat sessions, send messages, bookmark important AI responses, tag sessions for organisation, and search across their entire conversation history.
+AI ChatBot is a full-stack web application that provides a clean, terminal-themed interface for interacting with **Google Gemini AI** while maintaining a complete, searchable log of every conversation. Users can create chat sessions, send messages, bookmark important AI responses, tag sessions for organisation, and search across their entire conversation history.
 
 Beyond its immediate use as a personal AI assistant, the platform is architected as a **conversation auditing and logging system** — making it a strong candidate for enterprise deployment in security-conscious environments.
 
